@@ -12,17 +12,17 @@ import (
 
 // Struct used to hold individual items read in from receipt jsons
 type item struct {
-	ShortDescription string  `json:"shortDescription"`
-	Price            float64 `json:"price"`
+	ShortDescription string `json:"shortDescription"`
+	Price            string `json:"price"`
 }
 
 // Struct used to hold information from incoming receipt jsons while doing point calculation
 type rec struct {
-	Retailer     string  `json:"retailer"`
-	PurchaseDate string  `json:"purchaseDate"`
-	PurchaseTime string  `json:"purchaseTime"`
-	Items        []item  `json:"items"`
-	Total        float64 `json:"total"`
+	Retailer     string `json:"retailer"`
+	PurchaseDate string `json:"purchaseDate"`
+	PurchaseTime string `json:"purchaseTime"`
+	Items        []item `json:"items"`
+	Total        string `json:"total"`
 }
 
 // Struct used to build jsons for the processed receipts
@@ -102,7 +102,8 @@ func processReceipt(c *gin.Context) {
 	points += alNumCount
 
 	//If the total is a round dollar amount, add 50 points to the counter
-	tCents := newReceipt.Total - math.Floor(newReceipt.Total)
+	tFloat, _ := strconv.ParseFloat(newReceipt.Total, 64)
+	tCents := tFloat - math.Floor(tFloat)
 	if tCents == 0.0 {
 		points += 50
 	}
@@ -119,7 +120,8 @@ func processReceipt(c *gin.Context) {
 	//If the trimmed length of an item's name is a multiple of three, add points equal to 0.2 * the price, rounded up
 	for _, i := range newReceipt.Items {
 		if len(strings.TrimSpace(i.ShortDescription))%3 == 0 {
-			points += int(math.Ceil(0.2 * i.Price))
+			pFloat, _ := strconv.ParseFloat(i.Price, 64)
+			points += int(math.Ceil(0.2 * pFloat))
 		}
 	}
 
